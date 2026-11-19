@@ -7,7 +7,7 @@
 - 서비스: https://stocks.airquiz.kr
 - Coolify 프로젝트: `daily-stock-analysis-ko` / `production`
 - 원본 기준: `3acb2c5b585cc038bad7ed3fcdb9a7f898667ff0`
-- 한국어 수정 소스는 이 로컬 프로젝트에 있으며, 별도 GitHub 저장소에는 아직 게시하지 않았습니다.
+- 한국어 수정 소스: https://github.com/sonbonghee/daily_stock_analysis . 현재 Coolify는 검증한 Dockerfile 패키지로 배포하며 GitHub 푸시가 자동 배포를 실행하지 않습니다.
 
 ## 실행과 데이터
 

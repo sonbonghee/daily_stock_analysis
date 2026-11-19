@@ -9,9 +9,9 @@ import textwrap
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+revision = '3acb2c5b585cc038bad7ed3fcdb9a7f898667ff0'
 # Diff against the pinned upstream, avoiding duplication of its large locale/docs files.
-patch = subprocess.check_output(['git', 'diff', '--binary', 'HEAD', '--', 'apps/dsa-web', 'docker'], cwd=ROOT)
+patch = subprocess.check_output(['git', 'diff', '--binary', revision, '--', 'apps/dsa-web', 'docker'], cwd=ROOT)
 untracked = subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard', '-z', '--', 'apps/dsa-web', 'docker'], cwd=ROOT).decode().split('\0')
 paths = sorted(p for p in untracked if p and '/node_modules/' not in p and '/__pycache__/' not in p)
 for p in paths:
