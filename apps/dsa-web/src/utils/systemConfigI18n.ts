@@ -1,3 +1,4 @@
+import { SETTINGS_OPTIONS_KO } from '../locales/settingsOptionsKo';
 import type { SystemConfigCategory } from '../types/systemConfig';
 import type { UiLanguage } from '../i18n/uiText';
 
@@ -22,6 +23,16 @@ const categoryTitleMap: Record<UiLanguage, Record<SystemConfigCategory, string>>
     backtest: 'Backtest',
     uncategorized: 'Other',
   },
+ko: {
+    base: "기본 설정",
+    data_source: "데이터 소스",
+    ai_model: "AI 모델",
+    notification: "알림",
+    system: "시스템",
+    agent: "에이전트",
+    backtest: "백테스트",
+    uncategorized: "기타",
+  },
 };
 
 const categoryDescriptionMap: Record<UiLanguage, Partial<Record<SystemConfigCategory, string>>> = {
@@ -44,6 +55,16 @@ const categoryDescriptionMap: Record<UiLanguage, Partial<Record<SystemConfigCate
     agent: 'Manage Agent mode, strategies, and multi-agent orchestration.',
     backtest: 'Manage backtest switches, evaluation windows, and engine parameters.',
     uncategorized: 'Other uncategorized settings.',
+  },
+ko: {
+    base: "감시 목록 및 기본 런타임 파라미터 관리.",
+    data_source: "시장 데이터 소스 및 우선 전략 관리.",
+    ai_model: "모델 서비스, 모델 이름, 추론 파라미터 관리.",
+    notification: "봇, 웹훅, 알림 전달 관리.",
+    system: "스케줄링, 로깅, 포트, 시스템 파라미터 관리.",
+    agent: "에이전트 모드, 전략, 다중 에이전트 오케스트레이션 관리.",
+    backtest: "백테스트 스위치, 평가 윈도우, 엔진 파라미터 관리.",
+    uncategorized: "분류되지 않은 기타 설정.",
   },
 };
 
@@ -605,20 +626,20 @@ export function getFieldOptionLabel(
   fallbackLabel?: string,
   locale: UiLanguage = 'zh',
 ): string {
-  const map = locale === 'en' ? fieldOptionLabelMapEn[key] : fieldOptionLabelMap[key];
+  const map = locale !== 'zh' ? fieldOptionLabelMapEn[key] : fieldOptionLabelMap[key];
   if (!map) {
     return fallbackLabel ?? value;
   }
 
   const byValue = map[normalizeOptionToken(value)];
   if (byValue) {
-    return byValue;
+    return locale === 'ko' ? SETTINGS_OPTIONS_KO[byValue] ?? byValue : byValue;
   }
 
   if (fallbackLabel) {
     const byLabel = map[normalizeOptionToken(fallbackLabel)];
     if (byLabel) {
-      return byLabel;
+      return locale === 'ko' ? SETTINGS_OPTIONS_KO[byLabel] ?? byLabel : byLabel;
     }
   }
 

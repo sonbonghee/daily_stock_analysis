@@ -83,7 +83,7 @@ const formatRunCreatedAt = (language: UiLanguage, value: string | null | undefin
   if (Number.isNaN(parsed.getTime())) {
     return value;
   }
-  return parsed.toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
+  return parsed.toLocaleString(language === 'ko' ? 'ko-KR' : language === 'en' ? 'en-US' : 'zh-CN', {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
@@ -175,6 +175,11 @@ const formatAmount = (language: UiLanguage, value: unknown) => {
     return '-';
   }
   const amount = Number(value);
+  if (language === 'ko') {
+    if (Math.abs(amount) >= 100_000_000) return `${(amount / 100_000_000).toFixed(2)}억`;
+    if (Math.abs(amount) >= 10_000) return `${(amount / 10_000).toFixed(2)}만`;
+    return amount.toLocaleString('ko-KR', { maximumFractionDigits: 2 });
+  }
   if (language === 'en') {
     for (const [divisor, suffix] of [[1e9, 'B'], [1e6, 'M'], [1e3, 'K']] as const) {
       if (Math.abs(amount) >= divisor) return `${(amount / divisor).toFixed(2)} ${suffix}`;
@@ -560,7 +565,7 @@ const getRouteTimeLabel = (language: UiLanguage, item: ScreeningHotspotDetail['r
   }
   const parsed = new Date(rawTime);
   if (!Number.isNaN(parsed.getTime())) {
-    return parsed.toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
+    return parsed.toLocaleString(language === 'ko' ? 'ko-KR' : language === 'en' ? 'en-US' : 'zh-CN', {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
@@ -794,7 +799,7 @@ const formatHotspotUpdatedAt = (language: UiLanguage, value: string | null) => {
   if (Number.isNaN(parsed.getTime())) {
     return value;
   }
-  return parsed.toLocaleString(language === 'en' ? 'en-US' : 'zh-CN', {
+  return parsed.toLocaleString(language === 'ko' ? 'ko-KR' : language === 'en' ? 'en-US' : 'zh-CN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

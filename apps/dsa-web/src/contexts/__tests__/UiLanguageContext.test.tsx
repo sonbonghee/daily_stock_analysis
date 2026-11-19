@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   UiLanguageProvider,
 } from '../UiLanguageContext';
@@ -34,6 +34,22 @@ function createStorage(value: string | null): Storage {
 }
 
 describe('UiLanguageContext', () => {
+  it('uses the Korean deployment default but preserves explicit language preferences', () => {
+    vi.stubEnv('VITE_DEFAULT_UI_LANGUAGE', 'ko');
+    try {
+      localStorage.removeItem(UI_LANGUAGE_STORAGE_KEY);
+      expect(getRuntimeInitialLanguage()).toBe('ko');
+      localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, 'en');
+      expect(getRuntimeInitialLanguage()).toBe('en');
+    } finally { vi.unstubAllEnvs(); }
+  });
+  it('recognizes and persists Korean, including the document language', () => {
+    expect(resolveInitialUiLanguage({ navigatorLike: { language: 'ko-KR', languages: ['ko-KR', 'en'] } })).toBe('ko');
+    localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, 'ko');
+    render(<UiLanguageProvider><UiLanguageToggle /></UiLanguageProvider>);
+    expect(document.documentElement.lang).toBe('ko');
+    expect(screen.getByRole('button', { name: 'UI 언어 변경' })).toBeInTheDocument();
+  });
   it('resolves explicit storage choice before browser language', () => {
     expect(resolveInitialUiLanguage({
       storage: createStorage('zh'),
@@ -46,7 +62,7 @@ describe('UiLanguageContext', () => {
     })).toBe('en');
   });
 
-  it('falls back from invalid storage to the first supported browser language and then zh', () => {
+  it('falls back from invalid storage to the first supported browser language and then ko', () => {
     expect(resolveInitialUiLanguage({
       storage: createStorage('fr'),
       navigatorLike: { language: 'en-US', languages: ['en-US'] },
@@ -60,7 +76,7 @@ describe('UiLanguageContext', () => {
     expect(resolveInitialUiLanguage({
       storage: createStorage(null),
       navigatorLike: { language: 'tr-TR', languages: ['tr-TR'] },
-    })).toBe('zh');
+    })).toBe('ko');
   });
 
   it('falls back to browser language if storage getItem throws', () => {

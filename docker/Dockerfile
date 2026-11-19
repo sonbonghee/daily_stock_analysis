@@ -10,12 +10,13 @@ FROM node:20-slim AS web-builder
 WORKDIR /app/apps/dsa-web
 ARG DSA_WEB_VERSION=0.0.0
 ARG DSA_WEB_REVISION=unknown
+ARG VITE_DEFAULT_UI_LANGUAGE=ko
 
 COPY apps/dsa-web/package.json apps/dsa-web/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 
 COPY apps/dsa-web/ ./
-RUN DSA_WEB_VERSION="${DSA_WEB_VERSION}" DSA_WEB_REVISION="${DSA_WEB_REVISION}" npm run build
+RUN VITE_DEFAULT_UI_LANGUAGE="${VITE_DEFAULT_UI_LANGUAGE}" DSA_WEB_VERSION="${DSA_WEB_VERSION}" DSA_WEB_REVISION="${DSA_WEB_REVISION}" npm run build
 
 # Pin to bookworm: wkhtmltopdf was removed from Debian testing (2025)
 FROM python:3.11-slim-bookworm
@@ -24,7 +25,7 @@ FROM python:3.11-slim-bookworm
 WORKDIR /app
 
 # 设置时区为上海
-ENV TZ=Asia/Shanghai
+ENV TZ=Asia/Seoul
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # 安装系统依赖（wkhtmltopdf 含 wkhtmltoimage，用于 Markdown 转图片 Issue #289）
@@ -46,6 +47,7 @@ RUN groupadd -g 1000 dsa && \
 
 # 复制依赖文件
 COPY requirements.txt .
+COPY LICENSE THIRD_PARTY_NOTICES.md ./
 
 # 安装 Python 依赖
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
@@ -59,6 +61,7 @@ COPY src/ ./src/
 COPY strategies/ ./strategies/
 COPY --from=web-builder /app/static ./static/
 COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY docker/bootstrap-ko.py ./bootstrap-ko.py
 
 # Verify globally bundled runtime dependencies without leaving SDK logs in the image.
 # Guard OpenBLAS core dispatch on ARM64 hosts (e.g. Apple Silicon Linux VMs exposing
@@ -86,6 +89,8 @@ RUN case "$(uname -m)" in aarch64|arm64) export OPENBLAS_CORETYPE="${OPENBLAS_CO
 ENV PYTHONUNBUFFERED=1
 ENV LOG_DIR=/app/logs
 ENV DATABASE_PATH=/app/data/stock_analysis.db
+ENV ENV_FILE=/app/data/runtime.env
+ENV WEBUI_AUTO_BUILD=false
 # Web/API service
 ENV WEBUI_HOST=0.0.0.0
 ENV API_PORT=8000
@@ -97,13 +102,12 @@ EXPOSE 8000
 VOLUME ["/app/data", "/app/logs", "/app/reports"]
 
 # 健康检查（FastAPI 模式）
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8000/api/health || curl -f http://localhost:8000/health \
-    || python -c "import sys; sys.exit(0)"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+    CMD curl --fail --silent http://localhost:8000/api/health
 
 # 启动入口先修复 bind mount 目录权限，再降权为 dsa 执行应用；
 # 文档化 docker-compose exec 命令需显式使用 -u dsa，避免手动进程写入 root-owned 文件。
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # 默认命令（可被覆盖）
-CMD ["python", "main.py", "--schedule"]
+CMD ["python", "bootstrap-ko.py"]

@@ -82,20 +82,23 @@ type PortfolioSignalLookupResult = {
   error: string | null;
 };
 
-type PortfolioPageLanguage = 'zh' | 'en';
+type PortfolioPageLanguage = 'zh' | 'en' | 'ko';
 
 const PORTFOLIO_LIMITATION_LABELS: Record<string, Record<PortfolioPageLanguage, string>> = {
   realtime_quote_best_effort: {
     zh: '实时行情为尽力获取',
     en: 'Realtime quotes are best-effort',
+ko: "실시간 견적은 최선 노력입니다",
   },
   fx_and_cost_basis_partial: {
     zh: '汇率与成本基础为部分口径',
     en: 'FX and cost basis are partial',
+ko: "FX 및 비용 기반은 부분적입니다",
   },
   sector_and_risk_metrics_limited: {
     zh: '行业与风险指标覆盖有限',
     en: 'Sector and risk metrics are limited',
+ko: "섹터 및 리스크 지표는 제한됩니다",
   },
 };
 
@@ -173,6 +176,33 @@ const PORTFOLIO_RISK_DASHBOARD_TEXT = {
     positions: 'Positions',
     snapshotUnavailable: 'Portfolio snapshot unavailable',
     snapshotUnavailableDescription: 'Holdings and valuation are unknown. Refresh to try again.',
+  },
+ko: {
+    title: "리스크 및 노출 대시보드",
+    riskFlags: "리스크 플래그",
+    marketExposure: "시장 노출",
+    currencyExposure: "통화 노출",
+    noExposure: "노출 데이터 없음",
+    exposureUnavailable: "노출 정보 미사용 가능",
+    concentration: "포지션 집중도",
+    sector: "섹터 집중도",
+    drawdown: "드래우다운",
+    stopLoss: "손절",
+    aiSignal: "AI 신호",
+    priceQuality: "가격 품질",
+    active: "조치 필요",
+    stable: "정상",
+    unavailable: "사용 불가",
+    maxDrawdown: "최대 낙폭",
+    topPosition: "Top1",
+    topSector: "Top1",
+    triggered: "트리거됨",
+    near: "근접",
+    missingPrice: "가격 누락",
+    stalePrice: "오래된 가격",
+    positions: "거래량",
+    snapshotUnavailable: "포트폴리오 스냅샷 미사용 가능",
+    snapshotUnavailableDescription: "보유량 및 평가가 알려지지 않았습니다. 다시 시도하려면 새로고침하세요.",
   },
 } as const;
 

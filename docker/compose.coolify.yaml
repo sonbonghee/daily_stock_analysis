@@ -1,0 +1,28 @@
+services:
+  stock-analysis:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    expose:
+      - '8000'
+    environment:
+      TZ: Asia/Seoul
+      ENV_FILE: /app/data/runtime.env
+      DATABASE_PATH: /app/data/stock_analysis.db
+      API_PORT: '8000'
+      WEBUI_AUTO_BUILD: 'false'
+    volumes:
+      - stock-data:/app/data
+      - stock-logs:/app/logs
+      - stock-reports:/app/reports
+    healthcheck:
+      test: ['CMD', 'curl', '--fail', '--silent', 'http://localhost:8000/api/health']
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+volumes:
+  stock-data:
+  stock-logs:
+  stock-reports:
