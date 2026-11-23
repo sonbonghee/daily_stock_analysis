@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 revision = '3acb2c5b585cc038bad7ed3fcdb9a7f898667ff0'
 # Diff against the pinned upstream, avoiding duplication of its large locale/docs files.
-patch = subprocess.check_output(['git', 'diff', '--binary', revision, '--', 'apps/dsa-web', 'docker'], cwd=ROOT)
+patch = subprocess.check_output(['git', 'diff', '--binary', '--unified=0', revision, '--', 'apps/dsa-web', 'docker'], cwd=ROOT)
 untracked = subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard', '-z', '--', 'apps/dsa-web', 'docker'], cwd=ROOT).decode().split('\0')
 paths = sorted(p for p in untracked if p and '/node_modules/' not in p and '/__pycache__/' not in p)
 for p in paths:
@@ -32,7 +32,7 @@ RUN mkdir /src && tar -xzf /tmp/source.tar.gz -C /src --strip-components=1
 COPY <<KOREAN_SOURCE_OVERLAY /tmp/overlay.b64
 {encoded}
 KOREAN_SOURCE_OVERLAY
-RUN base64 -d /tmp/overlay.b64 | tar -xJf - -C /src && cd /src && git apply --check korean-localization.patch && git apply korean-localization.patch
+RUN base64 -d /tmp/overlay.b64 | tar -xJf - -C /src && cd /src && git apply --unidiff-zero --check korean-localization.patch && git apply --unidiff-zero korean-localization.patch
 '''
 dockerfile = (ROOT / 'docker/Dockerfile').read_text()
 syntax, body = dockerfile.split('\n', 1)

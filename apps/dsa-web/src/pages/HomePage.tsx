@@ -1,3 +1,5 @@
+import { FOCUS_REGIONS, FOCUS_EXCHANGES, FOCUS_EXCHANGE_LABELS, resolveFocusSymbol, isFocusStock, type FocusExchange } from '../utils/focusMarkets';
+import type { StockIndexItem } from '../types/stockIndex';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BarChart3, Check, SlidersHorizontal, X } from 'lucide-react';
@@ -287,13 +289,17 @@ const HomePage: React.FC = () => {
     [getWatchlistCodeIdentity],
   );
 
+  const [focusExchange, setFocusExchange] = useState<FocusExchange>('auto');
+  const [focusInputError, setFocusInputError] = useState('');
+  const filterFocusStock = useCallback((item: StockIndexItem) => isFocusStock(item, focusExchange), [focusExchange]);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSubmittingMarketReview, setIsSubmittingMarketReview] = useState(false);
   const [marketReviewNotice, setMarketReviewNotice] = useState<MarketReviewNotice>(null);
   const [marketReviewError, setMarketReviewError] = useState<ParsedApiError | null>(null);
   const [marketReviewReport, setMarketReviewReport] = useState<string | null>(null);
   const [marketReviewPayload, setMarketReviewPayload] = useState<MarketReviewPayload | null>(null);
-  const [marketReviewRegionOverride, setMarketReviewRegionOverride] = useState<MarketReviewRegion[] | undefined>();
+  const [marketReviewRegionOverride, setMarketReviewRegionOverride] = useState<MarketReviewRegion[] | undefined>([...FOCUS_REGIONS]);
   const [analysisSkills, setAnalysisSkills] = useState<SkillInfo[]>([]);
   const [selectedStrategyId, setSelectedStrategyId] = useState('');
   const [strategyMenuOpen, setStrategyMenuOpen] = useState(false);
@@ -875,15 +881,24 @@ const HomePage: React.FC = () => {
       selectionSource?: 'manual' | 'autocomplete' | 'import' | 'image',
       analysisSkills?: string[],
     ) => {
+      const resolved = selectionSource === 'import' || selectionSource === 'image'
+        ? stockCode : resolveFocusSymbol(stockCode ?? query, focusExchange);
+      if (!resolved) {
+        setFocusInputError(uiLanguage === 'ko'
+          ? '거래소를 선택하고 종목 코드를 입력하세요. 예: AAPL, 005930.KS, 247540.KQ, 7203.T. 종목명은 검색 결과에서 선택하세요.'
+          : 'Select an exchange and enter a ticker: AAPL, 005930.KS, 247540.KQ, 7203.T. Select company names from search results.');
+        return;
+      }
+      setFocusInputError('');
       void submitAnalysis({
-        stockCode,
+        stockCode: resolved,
         stockName,
         originalQuery: query,
         selectionSource: selectionSource ?? 'manual',
         skills: analysisSkills ?? selectedAnalysisSkills,
       });
     },
-    [query, selectedAnalysisSkills, submitAnalysis],
+    [query, selectedAnalysisSkills, submitAnalysis, focusExchange, uiLanguage],
   );
 
   useEffect(() => {
@@ -1532,10 +1547,21 @@ const HomePage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
+              <select
+                aria-label={uiLanguage === 'ko' ? '종목 거래소' : 'Stock exchange'}
+                value={focusExchange}
+                onChange={(event) => { setFocusExchange(event.target.value as FocusExchange); setFocusInputError(''); }}
+                disabled={isAnalyzing}
+                className="h-11 max-w-36 rounded-xl border border-subtle bg-surface px-2 text-xs text-foreground"
+              >
+                {FOCUS_EXCHANGES.map((exchange) => <option key={exchange} value={exchange}>{FOCUS_EXCHANGE_LABELS[exchange]}</option>)}
+              </select>
               <div className="relative min-w-0 flex-1">
                 <StockAutocomplete
+                  key={focusExchange}
+                  filterItem={filterFocusStock}
                   value={query}
-                  onChange={setQuery}
+                  onChange={(value) => { setQuery(value); setFocusInputError(''); }}
                   onSubmit={(stockCode, stockName, selectionSource) => {
                     handleSubmitAnalysis(stockCode, stockName, selectionSource);
                   }}
@@ -1646,6 +1672,12 @@ const HomePage: React.FC = () => {
             </div>
           </div>
         </header>
+        <div className="px-4 pb-2 text-xs text-muted-text">
+          <p>{uiLanguage === 'ko'
+            ? '미국 USD · 한국 KRW · 일본 JPY | 숫자 코드는 거래소를 선택하세요. 시세는 지연될 수 있으며 휴장일은 각 거래소 캘린더를 따릅니다.'
+            : 'US USD · Korea KRW · Japan JPY | Select an exchange for numeric tickers. Quotes may be delayed; holidays follow each exchange calendar.'}</p>
+          {focusInputError && <p role="alert" className="mt-1 text-danger">{focusInputError}</p>}
+        </div>
 
         {inputError || (duplicateError && duplicateBannerVisible) ? (
           <div className="px-3 pb-2 md:px-4">

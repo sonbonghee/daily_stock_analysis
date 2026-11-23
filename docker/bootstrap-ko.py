@@ -12,8 +12,8 @@ def initialize():
         with env_path.open('x', encoding='utf-8') as stream:
             stream.write(
                 'REPORT_LANGUAGE=ko\n'
-                'STOCK_LIST=005930.KS,000660.KS,AAPL\n'
-                'MARKET_REVIEW_REGION=kr\n'
+                'STOCK_LIST=AAPL,MSFT,005930.KS,000660.KS,7203.T,6758.T\n'
+                'MARKET_REVIEW_REGION=us,kr,jp\n'
                 'ADMIN_AUTH_ENABLED=true\n'
                 'MAX_WORKERS=1\n'
             )

@@ -18,7 +18,7 @@
 - `/app/data`, `/app/logs`, `/app/reports`에 각각 영구 볼륨을 연결합니다.
 - 설정은 `/app/data/runtime.env`에 저장되므로 웹에서 저장한 API 키와 종목 목록이 재배포 후에도 남습니다. 동일한 설정을 Coolify 환경변수에 중복 지정하지 마세요.
 - 최초 종목 예시: 삼성전자 `005930.KS`, SK하이닉스 `000660.KS`, 애플 `AAPL`.
-- `REPORT_LANGUAGE=ko`, `MARKET_REVIEW_REGION=kr`로 초기화합니다. 한국 주식은 `.KS`/`.KQ` 접미사를 포함하세요.
+- `REPORT_LANGUAGE=ko`, `MARKET_REVIEW_REGION=us,kr,jp`로 초기화합니다. 한국 주식은 `.KS`/`.KQ`, 일본 주식은 `.T` 접미사를 포함하세요. [세 시장 사용 안내](MARKETS_KO.md)를 참고하세요.
 
 ## 최초 로그인과 모델 설정
 

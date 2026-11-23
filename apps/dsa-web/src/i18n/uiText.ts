@@ -3010,7 +3010,7 @@ const ko = {
 
 ko['language.current'] = '한국어';
 ko['language.english'] = 'English';
-ko['home.placeholder'] = '종목 코드 입력: 삼성전자 005930.KS, SK하이닉스 000660.KS, AAPL';
+ko['home.placeholder'] = '종목 코드 입력: AAPL, 삼성전자 005930.KS, 도요타 7203.T';
 ko['layout.nav.chat'] = 'AI 종목 상담';
 ko['layout.nav.screening'] = '종목 탐색';
 ko['home.historyButton'] = '분석 기록';

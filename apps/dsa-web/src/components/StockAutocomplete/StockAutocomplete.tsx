@@ -5,7 +5,7 @@
  * Supports keyboard navigation, IME input method, graceful degradation
  */
 
-import { Component, useRef, useEffect, useState } from 'react';
+import { Component, useRef, useEffect, useState, useMemo } from 'react';
 import type { KeyboardEvent } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -13,12 +13,15 @@ import { useStockIndex } from '../../hooks/useStockIndex';
 import { useAutocomplete } from '../../hooks/useAutocomplete';
 import { SuggestionsList } from './SuggestionsList';
 import { cn } from '../../utils/cn';
+import type { StockIndexItem } from '../../types/stockIndex';
 import type { Market } from '../../types/stockIndex';
 
 const AUTOCOMPLETE_INPUT_CLASS =
   'input-surface input-focus-glow h-11 w-full rounded-xl border bg-transparent px-4 text-sm transition-all focus:outline-none disabled:cursor-not-allowed disabled:opacity-60';
 
 export interface StockAutocompleteProps {
+  /** Optional market-specific suggestion filter. */
+  filterItem?: (item: StockIndexItem) => boolean;
   /** Input value */
   value: string;
   /** Value change callback */
@@ -103,6 +106,7 @@ class StockAutocompleteBoundary extends Component<
 }
 
 function StockAutocompleteInner({
+  filterItem,
   value,
   onChange,
   onSubmit,
@@ -112,6 +116,7 @@ function StockAutocompleteInner({
   className,
 }: StockAutocompleteProps) {
   const { index, loading, fallback } = useStockIndex();
+  const filteredIndex = useMemo(() => filterItem ? index.filter(filterItem) : index, [index, filterItem]);
   const {
     // query,
     setQuery,
@@ -127,7 +132,7 @@ function StockAutocompleteInner({
     setIsComposing,
     runtimeFallback,
     error: autocompleteError,
-  } = useAutocomplete(index);
+  } = useAutocomplete(filteredIndex);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const prevValueRef = useRef(value);

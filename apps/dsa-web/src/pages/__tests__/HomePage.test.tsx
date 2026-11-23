@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { analysisApi, DuplicateTaskError } from '../../api/analysis';
@@ -12,6 +12,9 @@ import type { RunFlowSnapshot } from '../../types/runFlow';
 import { getReportText, normalizeReportLanguage } from '../../utils/reportLanguage';
 import { UI_LANGUAGE_STORAGE_KEY } from '../../utils/uiLanguage';
 import HomePage from '../HomePage';
+
+// Render with the real language provider; storage is explicitly seeded per test.
+const render = (ui: Parameters<typeof rtlRender>[0]) => rtlRender(ui, { wrapper: UiLanguageProvider });
 
 const navigateMock = vi.fn();
 
@@ -2500,7 +2503,7 @@ describe('HomePage', () => {
       items: [],
     });
     vi.mocked(analysisApi.analyzeAsync).mockRejectedValue(
-      new DuplicateTaskError('600519', 'task-1', '股票 600519 正在分析中'),
+      new DuplicateTaskError('AAPL', 'task-1', '股票 AAPL 正在分析中'),
     );
 
     render(
@@ -2510,13 +2513,13 @@ describe('HomePage', () => {
     );
 
     const input = await screen.findByPlaceholderText('输入股票代码或名称，如 600519、贵州茅台、AAPL');
-    fireEvent.change(input, { target: { value: '600519' } });
+    fireEvent.change(input, { target: { value: 'AAPL' } });
     fireEvent.click(screen.getByRole('button', { name: '分析' }));
 
     await waitFor(() => {
-      expect(screen.getByText(/股票 600519 正在分析中/)).toBeInTheDocument();
+      expect(screen.getByText(/股票 AAPL 正在分析中/)).toBeInTheDocument();
     });
-    expect(screen.getByText(/股票 600519 正在分析中/).closest('[role="alert"]')).toBeInTheDocument();
+    expect(screen.getByText(/股票 AAPL 正在分析中/).closest('[role="alert"]')).toBeInTheDocument();
   });
 
   it('dismisses the duplicate task banner when its close button is clicked', async () => {
@@ -2668,7 +2671,7 @@ describe('HomePage', () => {
     );
 
     const regionSelector = await screen.findByRole('button', { name: '选择大盘复盘市场' });
-    expect(regionSelector).toHaveTextContent('服务器默认');
+    expect(regionSelector).toHaveTextContent('美股 + 韩股 + 日股');
     expect(regionSelector).not.toHaveTextContent('A 股');
     expect(systemConfigApi.getConfig).not.toHaveBeenCalled();
 
@@ -2677,7 +2680,7 @@ describe('HomePage', () => {
     await waitFor(() => {
       expect(analysisApi.triggerMarketReview).toHaveBeenCalledWith({
         sendNotification: true,
-        regions: undefined,
+        regions: ['us', 'kr', 'jp'],
       });
     });
     expect(await screen.findByText('大盘复盘已完成')).toBeInTheDocument();
@@ -2714,7 +2717,8 @@ describe('HomePage', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: '选择大盘复盘市场' }));
     fireEvent.click(screen.getByRole('checkbox', { name: /A 股/ }));
-    fireEvent.click(screen.getByRole('checkbox', { name: /美股/ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /日股/ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /韩股/ }));
     fireEvent.click(screen.getByRole('button', { name: '大盘复盘' }));
 
     await waitFor(() => {
@@ -2775,7 +2779,7 @@ describe('HomePage', () => {
       expect(analysisApi.analyzeAsync).toHaveBeenCalled();
       expect(analysisApi.triggerMarketReview).toHaveBeenCalledWith({
         sendNotification: true,
-        regions: undefined,
+        regions: ['us', 'kr', 'jp'],
       });
     });
     expect(vi.mocked(analysisApi.analyzeAsync).mock.calls[0]?.[0]).not.toHaveProperty('reportLanguage');
@@ -3323,12 +3327,12 @@ describe('HomePage', () => {
     fireEvent.click(screen.getByRole('menuitemradio', { name: /成长质量/ }));
 
     const input = screen.getByPlaceholderText('输入股票代码或名称，如 600519、贵州茅台、AAPL');
-    fireEvent.change(input, { target: { value: '600519' } });
+    fireEvent.change(input, { target: { value: 'AAPL' } });
     fireEvent.click(screen.getByRole('button', { name: '分析' }));
 
     await waitFor(() => {
       expect(analysisApi.analyzeAsync).toHaveBeenCalledWith(expect.objectContaining({
-        stockCode: '600519',
+        stockCode: 'AAPL',
         skills: ['growth_quality'],
       }));
     });
